@@ -9,7 +9,7 @@
   </parent>
 
   <artifactId>vertx-sync</artifactId>
-  <version>3.3.3</version>
+  <version>3.3.3.FA</version>
 
   <properties>
     <stack.version>3.3.3</stack.version>
