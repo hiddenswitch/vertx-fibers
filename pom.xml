@@ -1,5 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
@@ -9,10 +8,10 @@
   </parent>
 
   <artifactId>vertx-sync</artifactId>
-  <version>3.3.3.FA1</version>
+  <version>3.4.2.FA1</version>
 
   <properties>
-    <stack.version>3.3.3</stack.version>
+    <stack.version>3.4.2-SNAPSHOT</stack.version>
 
     <quasar-core.version>0.7.5</quasar-core.version>
     <quasar-maven-plugin.version>0.7.3</quasar-maven-plugin.version>
@@ -49,6 +48,10 @@
           <groupId>org.hdrhistogram</groupId>
           <artifactId>HdrHistogram</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>com.google.protobuf</groupId>
+          <artifactId>protobuf-java</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -60,6 +63,12 @@
       <groupId>io.vertx</groupId>
       <artifactId>vertx-codetrans</artifactId>
       <optional>true</optional>
+    </dependency>
+    <dependency>
+      <!-- version aligned with the rest of the stack -->
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>19.0</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
