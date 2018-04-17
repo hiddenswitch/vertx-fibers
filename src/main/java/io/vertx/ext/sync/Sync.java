@@ -22,7 +22,8 @@ import java.util.function.Consumer;
  */
 public class Sync {
 
-  private static final String FIBER_SCHEDULER_CONTEXT_KEY = "__vertx-sync.fiberScheduler";
+  protected static final String FIBER_SCHEDULER_CONTEXT_KEY = "__vertx-sync.fiberScheduler";
+  public static final int DEFAULT_STACK_SIZE = 128;
 
   /**
    * Invoke an asynchronous operation and obtain the result synchronous.
@@ -178,7 +179,7 @@ public class Sync {
   @Suspendable
   public static <T> Handler<T> fiberHandler(Handler<T> handler) {
     FiberScheduler scheduler = getContextScheduler();
-    return p -> new Fiber<Void>(scheduler, () -> handler.handle(p)).start();
+    return p -> new Fiber<Void>(null, scheduler, DEFAULT_STACK_SIZE, () -> handler.handle(p)).start();
   }
 
   /**

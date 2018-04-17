@@ -8,6 +8,7 @@ import co.paralleluniverse.strands.channels.Channels;
 import co.paralleluniverse.strands.channels.ReceivePort;
 import io.vertx.core.VertxException;
 import io.vertx.ext.sync.HandlerReceiverAdaptor;
+import io.vertx.ext.sync.Sync;
 
 import java.util.concurrent.TimeUnit;
 
@@ -32,7 +33,7 @@ public class HandlerReceiverAdaptorImpl<T> implements HandlerReceiverAdaptor<T> 
   @Override
   @Suspendable
   public void handle(T t) {
-    new Fiber<Void>(fiberScheduler, () -> {
+    new Fiber<Void>(null, fiberScheduler, Sync.DEFAULT_STACK_SIZE, () -> {
       try {
         channel.send(t);
       } catch (Exception e) {

@@ -20,7 +20,7 @@ public abstract class SyncVerticle extends AbstractVerticle {
   @Override
   public void start(Future<Void> startFuture) throws Exception {
     instanceScheduler = Sync.getContextScheduler();
-    new Fiber<Void>(instanceScheduler, () -> {
+    new Fiber<Void>(null, instanceScheduler, Sync.DEFAULT_STACK_SIZE, () -> {
       try {
         SyncVerticle.this.start();
         startFuture.complete();
@@ -32,7 +32,7 @@ public abstract class SyncVerticle extends AbstractVerticle {
 
   @Override
   public void stop(Future<Void> stopFuture) throws Exception {
-    new Fiber<Void>(instanceScheduler, () -> {
+    new Fiber<Void>(null, instanceScheduler, Sync.DEFAULT_STACK_SIZE, () -> {
       try {
         SyncVerticle.this.stop();
         stopFuture.complete();
