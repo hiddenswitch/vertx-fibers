@@ -19,7 +19,7 @@ repositories {
 
 // enable ahead of time instrumentation of your code
 plugins {
-  id 'com.hiddenswitch.fibers.instrument' version '1.+'
+  id 'com.hiddenswitch.fibers.instrument' version '1.0.3'
 }
 
 // configure your instrumentation
