@@ -73,3 +73,14 @@ test {
 task install {
   dependsOn publishToMavenLocal
 }
+
+publishing {
+  publications {
+    mavenJava(MavenPublication) {
+      groupId = 'com.hiddenswitch'
+      artifactId = 'vertx-fibers'
+
+      from components.java
+    }
+  }
+}
