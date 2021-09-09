@@ -1,0 +1,5 @@
+//pluginManagement {
+//  includeBuild '../java-fibers'
+//}
+//
+//includeBuild('../java-fibers')

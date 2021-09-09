@@ -1,0 +1,64 @@
+plugins {
+  id 'java-library'
+  id 'maven-publish'
+  id 'com.hiddenswitch.fibers.instrument' version '1.+'
+}
+
+repositories {
+  mavenCentral()
+}
+
+java {
+  withSourcesJar()
+  withJavadocJar()
+}
+
+sourceSets {
+  examples {
+    compileClasspath += main.compileClasspath + main.output
+    runtimeClasspath += main.runtimeClasspath + main.output
+  }
+}
+
+configurations {
+  examples.extendsFrom(testImplementation)
+}
+
+group = 'com.hiddenswitch'
+version = '10.0.0'
+
+fibers {
+  allowBlocking = true
+  scanSuspendables = true
+  scanSuspendableSupers = true
+}
+
+dependencies {
+  api 'com.hiddenswitch:quasar-core:10.+'
+  compileOnly "io.vertx:vertx-core:4.+"
+  compileOnly 'org.jetbrains:annotations:22.0.0'
+  compileOnly 'org.slf4j:slf4j-api:1.7.32'
+
+  testImplementation "io.vertx:vertx-unit:4.+"
+  testImplementation "io.vertx:vertx-core:4.+"
+  testImplementation(group: 'io.vertx', name: 'vertx-core', version: "4.+", classifier: 'tests') {
+    exclude group: 'org.hamcrest', module: '*'
+    exclude group: 'com.google.errorprone', module: '*'
+    exclude group: 'org.checkerframework', module: 'checker-qual'
+  }
+  testImplementation 'org.hamcrest:hamcrest-core:1.3'
+  testImplementation('com.google.guava:guava:30.1.1-jre')
+  testImplementation 'junit:junit:4.12'
+
+  examplesImplementation 'io.vertx:vertx-web:4.+'
+  examplesImplementation 'io.vertx:vertx-pg-client:4.+'
+}
+
+test {
+  useJUnit();
+  enableAssertions = false
+}
+
+task install {
+  dependsOn publishToMavenLocal
+}

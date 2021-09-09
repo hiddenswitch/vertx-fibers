@@ -2,27 +2,29 @@ package io.vertx.ext.sync;
 
 import co.paralleluniverse.fibers.Fiber;
 import co.paralleluniverse.fibers.FiberScheduler;
+import co.paralleluniverse.fibers.SuspendExecution;
 import co.paralleluniverse.fibers.Suspendable;
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Future;
+import io.vertx.core.Promise;
 
 /**
  * A `Verticle` which runs its `start` and `stop` methods using fibers.
- *
+ * <p>
  * You should subclass this class instead of `AbstractVerticle` to create any verticles that use vertx-sync.
  *
  * @author <a href="http://tfox.org">Tim Fox</a>
  */
 public abstract class SyncVerticle extends AbstractVerticle {
 
-  protected FiberScheduler instanceScheduler;
+  private FiberScheduler instanceScheduler;
+
 
   @Override
-  public void start(Future<Void> startFuture) throws Exception {
+  public final void start(Promise<Void> startFuture) throws Exception {
     instanceScheduler = Sync.getContextScheduler();
-    new Fiber<Void>(null, instanceScheduler, Sync.DEFAULT_STACK_SIZE, () -> {
+    new Fiber<Void>("starting verticle", instanceScheduler, () -> {
       try {
-        SyncVerticle.this.start();
+        syncStart();
         startFuture.complete();
       } catch (Throwable t) {
         startFuture.fail(t);
@@ -31,10 +33,10 @@ public abstract class SyncVerticle extends AbstractVerticle {
   }
 
   @Override
-  public void stop(Future<Void> stopFuture) throws Exception {
-    new Fiber<Void>(null, instanceScheduler, Sync.DEFAULT_STACK_SIZE, () -> {
+  public final void stop(Promise<Void> stopFuture) throws Exception {
+    new Fiber<Void>("stopping verticle", instanceScheduler, () -> {
       try {
-        SyncVerticle.this.stop();
+        syncStop();
         stopFuture.complete();
       } catch (Throwable t) {
         stopFuture.fail(t);
@@ -47,17 +49,18 @@ public abstract class SyncVerticle extends AbstractVerticle {
   /**
    * Override this method in your verticle
    */
+  protected abstract void syncStart() throws SuspendExecution, InterruptedException;
+
+  protected abstract void syncStop() throws SuspendExecution, InterruptedException;
+
   @Override
-  @Suspendable
-  public void start() throws Exception {
+  public final void start() {
+    throw new UnsupportedOperationException();
   }
 
-  /**
-   * Optionally override this method in your verticle if you have cleanup to do
-   */
-  @Override
-  @Suspendable
-  public void stop() throws Exception {
-  }
 
+  @Override
+  public final void stop() {
+    throw new UnsupportedOperationException();
+  }
 }
