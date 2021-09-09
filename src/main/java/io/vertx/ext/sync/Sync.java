@@ -549,8 +549,6 @@ public class Sync {
    * @param future A Java future
    * @param <T>    The return type of the future
    * @return A result
-   * @throws SuspendExecution indicating this method must appear inside a fiber or the body of an {@link
-   *                          Sync#async(SuspendableAction1)} handler
    * @throws RuntimeException when the future fails. Checked exceptions like {@link InterruptedException} and {@link
    *                          java.util.concurrent.TimeoutException} are both wrapped as the {@code cause} of the thrown
    *                          {@link RuntimeException}. Retrieve the root exception using {@link

@@ -79,7 +79,6 @@ publishing {
     mavenJava(MavenPublication) {
       groupId = 'com.hiddenswitch'
       artifactId = 'vertx-fibers'
-
       from components.java
     }
   }
