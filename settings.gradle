@@ -1,5 +1,8 @@
-//pluginManagement {
-//  includeBuild '../java-fibers'
-//}
-//
-//includeBuild('../java-fibers')
+// enables local development with java-fibers
+if (file('../java-fibers').exists()) {
+  pluginManagement {
+    includeBuild '../java-fibers'
+  }
+
+  includeBuild('../java-fibers')
+}

@@ -8,6 +8,9 @@ import io.vertx.core.http.HttpServer;
 import io.vertx.ext.sync.SyncVerticle;
 import io.vertx.ext.web.Router;
 import io.vertx.pgclient.PgPool;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
+import io.vertx.sqlclient.SqlConnection;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -34,27 +37,27 @@ public class ExampleCheckedSyncVerticle extends SyncVerticle {
     httpServer = vertx.createHttpServer();
     pgPool = PgPool.pool();
 
-    var router = Router.router(vertx);
+    Router router = Router.router(vertx);
     router.route("/test")
       // observe the use of the async keyword to decorate a typical handler
       // this lets you use await to await the completion of vertx Futures
       .handler(async(routingContext -> {
         // you can now use await here
-        var connection = await(pgPool.getConnection());
+        SqlConnection connection = await(pgPool.getConnection());
 
         try {
           // observe the use of a timeout
-          var result = await(connection
+          RowSet<Row> result = await(connection
             .query("select * from very_large_table")
             .execute(), 1000L, TimeUnit.MILLISECONDS);
 
-          var data = Streams.stream(result).map(row -> row.getString("some_column"))
+          String data = Streams.stream(result).map(row -> row.getString("some_column"))
             .collect(Collectors.joining(","));
 
           await(routingContext.end(data));
         } catch (Throwable possiblyCheckedException) {
           // example showing how to handle timeout
-          var rootCause = Throwables.getRootCause(possiblyCheckedException);
+          Throwable rootCause = Throwables.getRootCause(possiblyCheckedException);
           if (rootCause instanceof TimeoutException) {
             routingContext.response().setStatusCode(408);
             routingContext.end("request timed out");

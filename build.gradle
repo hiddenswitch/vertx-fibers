@@ -1,7 +1,7 @@
 plugins {
   id 'java-library'
   id 'maven-publish'
-  id 'com.hiddenswitch.fibers.instrument' version '1.0.3'
+  id 'com.hiddenswitch.fibers.instrument' version '1.0.4'
 }
 
 repositories {
@@ -9,8 +9,8 @@ repositories {
 }
 
 java {
-  sourceCompatibility(JavaVersion.VERSION_11)
-  targetCompatibility(JavaVersion.VERSION_11)
+  sourceCompatibility(JavaVersion.VERSION_1_9)
+  targetCompatibility(JavaVersion.VERSION_1_9)
   withSourcesJar()
   withJavadocJar()
 }
@@ -27,7 +27,7 @@ configurations {
 }
 
 group = 'com.hiddenswitch'
-version = '10.0.1'
+version = '10.0.3'
 
 fibers {
   allowBlocking = true
@@ -35,11 +35,20 @@ fibers {
   scanSuspendableSupers = true
 }
 
+task testJava9(type: Test) {
+  javaLauncher.set(javaToolchains.launcherFor {
+    languageVersion = JavaLanguageVersion.of(9)
+  })
+}
+
+check.dependsOn testJava9
+
 dependencies {
   api 'com.hiddenswitch:quasar-core:10.+'
   compileOnly "io.vertx:vertx-core:4.+"
   compileOnly 'org.jetbrains:annotations:22.0.0'
-  compileOnly 'org.slf4j:slf4j-api:1.7.32'
+  implementation 'org.slf4j:slf4j-api:1.7.32'
+  implementation 'com.google.guava:guava:26.0-jre'
 
   testImplementation "io.vertx:vertx-unit:4.+"
   testImplementation "io.vertx:vertx-core:4.+"

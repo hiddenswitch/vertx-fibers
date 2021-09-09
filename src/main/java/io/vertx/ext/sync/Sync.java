@@ -231,16 +231,16 @@ public class Sync {
    * @return a concatenated stack trace
    */
   public static StackTraceElement[] concatAndFilterStackTrace(Throwable... throwables) {
-    var length = 0;
-    for (var i = 0; i < throwables.length; i++) {
+    int length = 0;
+    for (int i = 0; i < throwables.length; i++) {
       length += throwables[i].getStackTrace().length;
     }
-    var newStack = new ArrayList<StackTraceElement>(length);
+    ArrayList<StackTraceElement> newStack = new ArrayList<StackTraceElement>(length);
     for (Throwable throwable : throwables) {
-      var stack = throwable.getStackTrace();
+      StackTraceElement[] stack = throwable.getStackTrace();
       toIterateTheStackTrace:
       for (StackTraceElement stackTraceElement : stack) {
-        for (var anExcludedPrefix : EXCLUDE_PREFIXES_FROM_STACK) {
+        for (String anExcludedPrefix : EXCLUDE_PREFIXES_FROM_STACK) {
           if (stackTraceElement.getClassName().startsWith(anExcludedPrefix)) {
             continue toIterateTheStackTrace;
           }
@@ -473,7 +473,7 @@ public class Sync {
    * @return a fiber handler
    */
   public static <T> Handler<T> async(SuspendableAction1<T> handler) {
-    var scheduler = getContextScheduler();
+    FiberScheduler scheduler = getContextScheduler();
     return async(scheduler, handler);
   }
 
@@ -492,8 +492,8 @@ public class Sync {
    */
   public static <T, R> Function<T, Future<R>> async(SuspendableFunction<T, R> mapper) {
     return (previousResult) -> {
-      var promise = Promise.<R>promise();
-      var fiber = new Fiber<>(getContextScheduler(), () -> {
+      Promise<R> promise = Promise.<R>promise();
+      Fiber<Object> fiber = new Fiber<>(getContextScheduler(), () -> {
         try {
           promise.complete(mapper.apply(previousResult));
         } catch (Throwable t) {
@@ -509,11 +509,11 @@ public class Sync {
 
 
   private static void uncaughtException(Strand f, Throwable e) {
-    var currentContext = Vertx.currentContext();
+    Context currentContext = Vertx.currentContext();
     if (currentContext == null) {
       return;
     }
-    var throwableHandler = currentContext.owner().exceptionHandler();
+    Handler<Throwable> throwableHandler = currentContext.owner().exceptionHandler();
     if (throwableHandler == null) {
       return;
     }
@@ -523,11 +523,11 @@ public class Sync {
 
   private static <T> Handler<T> async(FiberScheduler scheduler, SuspendableAction1<T> handler) {
     return v -> {
-      var passedScheduler = scheduler;
+      FiberScheduler passedScheduler = scheduler;
       if (passedScheduler == null) {
         passedScheduler = getContextScheduler();
       }
-      var fiber = new Fiber<Void>(passedScheduler, () -> handler.call(v));
+      Fiber<Void> fiber = new Fiber<Void>(passedScheduler, () -> handler.call(v));
       fiber.inheritThreadLocals();
       fiber.setUncaughtExceptionHandler(Sync::uncaughtException);
       fiber.start();
@@ -561,7 +561,7 @@ public class Sync {
    */
   @Suspendable
   public static <T> T get(CompletableFuture<T> future) {
-    var context = Vertx.currentContext();
+    Context context = Vertx.currentContext();
     return Sync.await(h -> future.whenComplete(resultHandler(h, context)));
   }
 
@@ -635,7 +635,7 @@ public class Sync {
         }
 
         // this will return null if the stream is ended
-        var receive = readStreamIterable.adaptor.receive();
+        T receive = readStreamIterable.adaptor.receive();
         if (receive == null) {
           readStreamIterable.ended.tryComplete();
           completed = readStreamIterable.adaptor.receivePort().isClosed();
@@ -660,7 +660,7 @@ public class Sync {
 
         // already set by hasNext
         if (next != null) {
-          var receive = next;
+          T receive = next;
           next = null;
           return receive;
         } else {
@@ -669,7 +669,7 @@ public class Sync {
             throw new NoSuchElementException();
           }
 
-          var receive = readStreamIterable.adaptor.receive();
+          T receive = readStreamIterable.adaptor.receive();
           if (receive == null) {
             readStreamIterable.ended.tryComplete();
             completed = readStreamIterable.adaptor.receivePort().isClosed();

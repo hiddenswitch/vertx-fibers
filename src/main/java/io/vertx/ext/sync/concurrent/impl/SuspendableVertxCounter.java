@@ -62,7 +62,7 @@ public class SuspendableVertxCounter implements SuspendableCounter {
   @Suspendable
   public void close() {
     if (counter instanceof Closeable) {
-      var p = Promise.<Void>promise();
+      Promise<Void> p = Promise.<Void>promise();
       ((Closeable) counter).close(p);
       await(p.future());
     }

@@ -1,10 +1,7 @@
 package io.vertx.ext.sync.concurrent;
 
 import co.paralleluniverse.fibers.Suspendable;
-import io.vertx.core.Closeable;
-import io.vertx.core.Promise;
-import io.vertx.core.Vertx;
-import io.vertx.core.VertxException;
+import io.vertx.core.*;
 import io.vertx.core.shareddata.Lock;
 import io.vertx.ext.sync.Sync;
 import org.jetbrains.annotations.NotNull;
@@ -73,7 +70,7 @@ public interface SuspendableLock extends Closeable {
 		@Suspendable
 		@NotNull
 		static VertxLock lock(String name, long timeout) {
-			var context = Vertx.currentContext();
+      Context context = Vertx.currentContext();
 			Lock lock = await(context.owner().sharedData().getLockWithTimeout(name, timeout));
 			return new VertxLock(lock);
 		}
@@ -81,7 +78,7 @@ public interface SuspendableLock extends Closeable {
 		@NotNull
 		@Suspendable
 		static VertxLock lock(String name) {
-			var context = Vertx.currentContext();
+      Context context = Vertx.currentContext();
 			Lock lock = await(context.owner().sharedData().getLock(name));
 			return new VertxLock(lock);
 		}

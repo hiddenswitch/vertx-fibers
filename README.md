@@ -1,6 +1,6 @@
 # vert-fibers
 
-This is a fork of Vertx's Sync library updated for Vertx 4.+, Java 11+ and with instrumentation plugins for Gradle.
+This is a fork of Vertx's Sync library updated for Vertx 4.+, Java 9+ and with instrumentation plugins for Gradle.
 
 ### Overview
 
@@ -19,7 +19,7 @@ repositories {
 
 // enable ahead of time instrumentation of your code
 plugins {
-  id 'com.hiddenswitch.fibers.instrument' version '1.0.3'
+  id 'com.hiddenswitch.fibers.instrument' version '1.0.4'
 }
 
 // configure your instrumentation
