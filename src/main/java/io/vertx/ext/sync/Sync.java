@@ -494,9 +494,26 @@ public class Sync {
    * @return a future
    */
   public static <T> Future<T> async(SuspendableCallable<T> callable) {
+    FiberScheduler contextScheduler = getContextScheduler();
+    return async(contextScheduler, callable);
+  }
+
+  /**
+   * Returns a future that completes when the provided suspendable callable (synchronous code) returns a value or throws
+   * an exception.
+   * <p>
+   * This allows you to use {@link CheckedSync#await(Future)} and {@link Sync#await(Future)}.
+   *
+   * @param contextScheduler A scheduler
+   * @param callable         A fiber-instrumented / fiber-safe callable
+   * @param <T>              The return type (the type of the future's result)
+   * @return a future
+   * @see #getContextScheduler(Context) to get a context scheduler
+   */
+  public static <T> Future<T> async(FiberScheduler contextScheduler, SuspendableCallable<T> callable) {
     Throwable site = new Throwable();
     Promise<T> promise = Promise.promise();
-    Fiber<Object> fiber = new Fiber<>(getContextScheduler(), () -> {
+    Fiber<Object> fiber = new Fiber<>(contextScheduler, () -> {
       try {
         promise.complete(callable.run());
       } catch (Throwable t) {
@@ -523,7 +540,6 @@ public class Sync {
    * @return The decorated mapper
    */
   public static <T, R> Function<T, Future<R>> async(SuspendableFunction<T, R> mapper) {
-    Throwable site = new Throwable();
     return (previousResult) -> async(() -> {
       try {
         return mapper.apply(previousResult);
@@ -547,13 +563,22 @@ public class Sync {
   }
 
 
-  private static <T> Handler<T> async(FiberScheduler scheduler, SuspendableAction1<T> handler) {
+  /**
+   * Returns a handler that will run on the provided fiber scheduler when called.
+   *
+   * @param scheduler a scheduler
+   * @param handler   a handler
+   * @param <T>       the incoming argument to the handler
+   * @return a handler
+   * @see #getContextScheduler(Context) to get a context to schedule on
+   */
+  public static <T> Handler<T> async(FiberScheduler scheduler, SuspendableAction1<T> handler) {
     return v -> {
       FiberScheduler passedScheduler = scheduler;
       if (passedScheduler == null) {
         passedScheduler = getContextScheduler();
       }
-      Fiber<Void> fiber = new Fiber<Void>(passedScheduler, () -> handler.call(v));
+      Fiber<Void> fiber = new Fiber<>(passedScheduler, () -> handler.call(v));
       fiber.inheritThreadLocals();
       fiber.setUncaughtExceptionHandler(Sync::uncaughtException);
       fiber.start();
