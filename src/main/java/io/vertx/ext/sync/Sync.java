@@ -3,6 +3,7 @@ package io.vertx.ext.sync;
 import co.paralleluniverse.fibers.*;
 import co.paralleluniverse.strands.Strand;
 import co.paralleluniverse.strands.SuspendableAction1;
+import co.paralleluniverse.strands.SuspendableCallable;
 import co.paralleluniverse.strands.SuspendableIterator;
 import co.paralleluniverse.strands.channels.Channel;
 import co.paralleluniverse.strands.concurrent.ReentrantLock;
@@ -15,6 +16,7 @@ import io.vertx.ext.sync.impl.HandlerAdaptor;
 import io.vertx.ext.sync.impl.HandlerReceiverAdaptorImpl;
 import org.jetbrains.annotations.NotNull;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.NoSuchElementException;
 import java.util.Objects;
@@ -212,6 +214,10 @@ public class Sync {
    * @return
    */
   private static RuntimeException makeSafe(Throwable exception) {
+    return makeSafe(exception, new Throwable());
+  }
+
+  private static RuntimeException makeSafe(Throwable exception, Throwable site) {
     Throwable res = Throwables.getRootCause(exception);
     RuntimeException thrower;
     if (!(res instanceof RuntimeException)) {
@@ -220,7 +226,7 @@ public class Sync {
       thrower = (RuntimeException) res;
     }
     // Append the current stack so we see what called await fiber
-    thrower.setStackTrace(concatAndFilterStackTrace(res, new Throwable()));
+    thrower.setStackTrace(concatAndFilterStackTrace(res, site));
     return thrower;
   }
 
@@ -477,6 +483,32 @@ public class Sync {
     return async(scheduler, handler);
   }
 
+  /**
+   * Returns a future that completes when the provided suspendable callable (synchronous code) returns a value or throws
+   * an exception.
+   * <p>
+   * This allows you to use {@link CheckedSync#await(Future)} and {@link Sync#await(Future)}.
+   *
+   * @param callable A fiber-instrumented / fiber-safe callable
+   * @param <T>      The return type (the type of the future's result)
+   * @return a future
+   */
+  public static <T> Future<T> async(SuspendableCallable<T> callable) {
+    Throwable site = new Throwable();
+    Promise<T> promise = Promise.promise();
+    Fiber<Object> fiber = new Fiber<>(getContextScheduler(), () -> {
+      try {
+        promise.complete(callable.run());
+      } catch (Throwable t) {
+        promise.tryFail(makeSafe(t, site));
+      }
+    });
+    fiber.setUncaughtExceptionHandler((f, e) -> promise.tryFail(e));
+    fiber.inheritThreadLocals();
+    fiber.start();
+    return promise.future();
+  }
+
 
   /**
    * Returns a mapper for {@link Future#compose(Function)} that runs {@code mapper} inside a fiber.
@@ -491,20 +523,14 @@ public class Sync {
    * @return The decorated mapper
    */
   public static <T, R> Function<T, Future<R>> async(SuspendableFunction<T, R> mapper) {
-    return (previousResult) -> {
-      Promise<R> promise = Promise.<R>promise();
-      Fiber<Object> fiber = new Fiber<>(getContextScheduler(), () -> {
-        try {
-          promise.complete(mapper.apply(previousResult));
-        } catch (Throwable t) {
-          promise.tryFail(t);
-        }
-      });
-      fiber.setUncaughtExceptionHandler((f, e) -> promise.tryFail(e));
-      fiber.inheritThreadLocals();
-      fiber.start();
-      return promise.future();
-    };
+    Throwable site = new Throwable();
+    return (previousResult) -> async(() -> {
+      try {
+        return mapper.apply(previousResult);
+      } catch (InvocationTargetException | IllegalAccessException e) {
+        throw new RuntimeException(e);
+      }
+    });
   }
 
 
