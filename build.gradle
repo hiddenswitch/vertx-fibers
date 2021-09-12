@@ -28,6 +28,7 @@ configurations {
 
 group = 'com.hiddenswitch'
 version = '10.0.3'
+def vertxVersion = "4.1.2"
 
 fibers {
   allowBlocking = true
@@ -44,15 +45,15 @@ task testJava9(type: Test) {
 check.dependsOn testJava9
 
 dependencies {
-  api 'com.hiddenswitch:quasar-core:10.+'
-  compileOnly "io.vertx:vertx-core:4.1.2"
+  api 'com.hiddenswitch:quasar-core:10.0.3'
+  compileOnly "io.vertx:vertx-core:$vertxVersion"
   compileOnly 'org.jetbrains:annotations:22.0.0'
   implementation 'org.slf4j:slf4j-api:1.7.32'
   implementation 'com.google.guava:guava:26.0-jre'
 
-  testImplementation "io.vertx:vertx-unit:4.1.2"
-  testImplementation "io.vertx:vertx-core:4.1.2"
-  testImplementation(group: 'io.vertx', name: 'vertx-core', version: "4.+", classifier: 'tests') {
+  testImplementation "io.vertx:vertx-unit:$vertxVersion"
+  testImplementation "io.vertx:vertx-core:$vertxVersion"
+  testImplementation(group: 'io.vertx', name: 'vertx-core', version: vertxVersion, classifier: 'tests') {
     exclude group: 'org.hamcrest', module: '*'
     exclude group: 'com.google.errorprone', module: '*'
     exclude group: 'org.checkerframework', module: 'checker-qual'
@@ -61,8 +62,8 @@ dependencies {
   testImplementation('com.google.guava:guava:30.1.1-jre')
   testImplementation 'junit:junit:4.12'
 
-  examplesImplementation 'io.vertx:vertx-web:4.1.2'
-  examplesImplementation 'io.vertx:vertx-pg-client:4.1.2'
+  examplesImplementation "io.vertx:vertx-web:$vertxVersion"
+  examplesImplementation "io.vertx:vertx-pg-client:$vertxVersion"
 }
 
 test {
