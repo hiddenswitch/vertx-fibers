@@ -8,7 +8,9 @@ import co.paralleluniverse.strands.SuspendableIterator;
 import co.paralleluniverse.strands.channels.Channel;
 import co.paralleluniverse.strands.concurrent.ReentrantLock;
 import com.google.common.base.Throwables;
+import io.netty.channel.EventLoop;
 import io.vertx.core.*;
+import io.vertx.core.impl.ContextInternal;
 import io.vertx.core.streams.ReadStream;
 import io.vertx.ext.sync.concurrent.SuspendableFunction;
 import io.vertx.ext.sync.impl.AsyncAdaptor;
@@ -16,6 +18,7 @@ import io.vertx.ext.sync.impl.HandlerAdaptor;
 import io.vertx.ext.sync.impl.HandlerReceiverAdaptorImpl;
 import org.jetbrains.annotations.NotNull;
 
+import java.lang.ref.WeakReference;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.NoSuchElementException;
@@ -24,6 +27,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.*;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -424,13 +428,13 @@ public class Sync {
     // We maintain one scheduler per context
     FiberScheduler scheduler = context.get(FIBER_SCHEDULER_CONTEXT_KEY);
     if (scheduler == null) {
-      Thread eventLoop = Thread.currentThread();
+      // determines the context event loop at a later time
+      ContextInternal contextInternal = (ContextInternal) context;
       scheduler = new FiberExecutorScheduler("vertx.contextScheduler", command -> {
-        if (Thread.currentThread() != eventLoop) {
-          context.runOnContext(v -> command.run());
-        } else {
-          // Just run directly
+        if (contextInternal.isRunningOnContext()) {
           command.run();
+        } else {
+          contextInternal.runOnContext(v -> command.run());
         }
       });
       context.put(FIBER_SCHEDULER_CONTEXT_KEY, scheduler);
